@@ -1,0 +1,13 @@
+Package: libws-commons-util-java
+Status: install ok installed
+Priority: optional
+Section: java
+Installed-Size: 101
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Architecture: all
+Version: 1.0.1-7
+Description: Common utilities from the Apache Web Services Project
+ This is a small collection of utility classes, that allow high
+ performance XML processing based on SAX.
+Original-Maintainer: Debian Java Maintainers <pkg-java-maintainers@lists.alioth.debian.org>
+Homepage: http://ws.apache.org/commons/util/
