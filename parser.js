@@ -22,24 +22,32 @@ function parse(input) {
                 isKey = false;
                 break;
             case '\n':
-                //alert(input[i+1]);
                 if(input[i+1] !== ' ') {
                     //this is where parser goes on to next key/value pair
                     let prunedKey = key.split(' ').join('');
-                    if(prunedKey === 'Package') {
-                        //Each element starts with key package, so instantiate new element should key be "Package"
-                        if(element !== null){
-                            elements.push(element);
-                        }
-                        element = new Object();
+                    switch(prunedKey) {
+                        case 'Depends':
+                            element[prunedKey] = parseDepends(value);
+                            break;
+                        case 'Package':
+                            //Each element starts with key package, so instantiate new element should key be "Package"
+                            //Push old element to elements array
+                            if(element !== null){
+                                elements.push(element);
+                            }
+                            element = new Object();
+
+                            //falls to default...
+                        default:
+                            element[prunedKey] = value;
                     }
-                    element[prunedKey] = value;
 
                     key = "";
                     value = "";
                     isKey = true;
                     break;
                 }
+                //else fall to default
             default:
                 switch(isKey) {
                     case true:
@@ -50,7 +58,20 @@ function parse(input) {
                         break;
                 }
         }
+
+        //if end-of-file, push element to array.
+        //This is to make sure no package is left out
+        if(i === input.length-1){
+            elements.push(element);
+        }
     }
     console.log(elements);
     return elements;
+}
+
+function parseDepends(input) {
+    //dependencies object
+    let d = new Object();
+    d.input = input;
+    return d;
 }

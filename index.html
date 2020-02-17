@@ -5,8 +5,19 @@
     <title>Status exposer</title>
     <script src="parser.js" type="text/javascript"></script>
     <script src="main.js" type="text/javascript"></script>
+    <link rel="stylesheet" type="text/css" href="styles.css">
 </head>
 <body>
+    <div class="split left">
+        <table id="packages"></table>
+    </div>
 
+    <div class="split right">
+        <div id="package-info">
+            <h1 id="p-package"></h1>
+            <p id="p-description"></p>
+            <p id="p-depends"></p>
+        </div>
+    </div>
 </body>
 </html>
