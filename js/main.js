@@ -3,7 +3,7 @@
         let client = new XMLHttpRequest();
 
         //status.real is a mock file. The real one can be found at /var/lib/dpkg/status on Debian and Ubuntu systems.
-        client.open('GET', '../status.real');
+        client.open('GET', 'status.real');
         client.onreadystatechange = function() {
             if (client.readyState === 4) {
                 if (client.status === 200) {
