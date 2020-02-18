@@ -80,7 +80,7 @@ function parseDepends(input) {
     //name of a single dependency
     let dependsName = "";
 
-    //array of optional packages
+    //array of alternative packages
     let optionals = [];
 
     //if true parser omits characters

@@ -3,10 +3,12 @@
         let client = new XMLHttpRequest();
 
         //status.real is a mock file. The real one can be found at /var/lib/dpkg/status on Debian and Ubuntu systems.
-        client.open('GET', 'status.real');
+        client.open('GET', '../status.real');
         client.onreadystatechange = function() {
             if (client.readyState === 4) {
                 if (client.status === 200) {
+
+                    //parses the file and gets a package array
                     let elements = parse(client.responseText);
 
                     //sort alphabetically
@@ -19,7 +21,7 @@
                     createIds(elements);
                     mapDependencies(elements);
                     createTable(elements);
-                    displayElement(elements[0]);
+                    //displayElement(elements[0]);
                 }
             }
         };
@@ -29,6 +31,8 @@
 })();
 
 function createIds(elements) {
+    //create id's for all elements
+
     for(let e = 0; e < elements.length; e++) {
         elements[e].id = e;
     }
@@ -55,7 +59,14 @@ function mapDependencies(elements) {
                     let dependency = elements.find((element) => {
                         return element.Package === rawDependencies[j];
                     });
-                    pushDependency(dependency);
+
+                    if(dependency == null) {
+                        pushDependency(rawDependencies[j]);
+                    }
+                    else {
+                        pushDependency(dependency);
+                        pushReverseDependency(dependency, e);
+                    }
                 }
                 else if(Array.isArray(rawDependencies[j])) {
                     //if element is array it means that it has pipe dependency (optionals)
@@ -64,16 +75,20 @@ function mapDependencies(elements) {
                     let dArr = [];
 
                     for(let k = 0; k < rawDependencies[j].length; k++) {
+
+                        //find the correct dependency
                         let dependency = elements.find((element) => {
                             //console.log(element.Package+' '+rawDependencies[j][k]+' areSame:'+(element.Package == rawDependencies[j][k]));
                             return element.Package.trim() === rawDependencies[j][k].trim();
                         });
+
                         if(dependency == null) {
                             //if system knows no such dependency, push it to array as a string
-                            console.log(rawDependencies[j][k]);
+                            //console.log(rawDependencies[j][k]);
                             dArr.push(rawDependencies[j][k]);
-                        }else {
+                        } else {
                             dArr.push(dependency);
+                            pushReverseDependency(dependency, e);
                         }
                     }
                     pushDependency(dArr);
@@ -88,9 +103,24 @@ function mapDependencies(elements) {
                 e.Dependencies.push(dependency);
             }
         }
+
+        function pushReverseDependency(dependee, dependency) {
+
+            if(dependee != null) {
+                //check if revDependencies attribute exists in dependee
+                if(!('revDependencies' in dependee)) {
+                    dependee.revDependencies = [];
+                }
+
+                if(dependency != null) {
+                    dependee.revDependencies.push(dependency);
+                }
+            }
+
+            //console.log('pushReverseDependency:'+dependee.revDependencies)
+        }
     }
 }
-
 
 function createTable(elements) {
     //creates table for html from elements array
@@ -124,70 +154,91 @@ function displayElement(element) {
     document.getElementById("p-package").innerHTML = element.Package;
     document.getElementById("p-description").innerHTML = element.Description;
 
-    let dependsTable = document.getElementById("p-depends");
-    dependsTable.innerHTML = "";
+    createDependencyTable();
+    createRevDependencyTable();
 
-    //make a table of dependencies
-    for(let j = 0; j < element.Dependencies.length; j++) {
-        //console.log('element.Dependencies:'+element.Dependencies);
-        if(Array.isArray(element.Dependencies[j])) {
+    function createDependencyTable() {
+        let table = document.getElementById("p-depends");
+        table.innerHTML = "";
 
-            //add parantheses for pipe dependencies (optionals)
-            createFillRow('(');
+        //make a table of dependencies
+        for(let j = 0; j < element.Dependencies.length; j++) {
+            //console.log('element.Dependencies:'+element.Dependencies);
 
-            for(let k = 0; k < element.Dependencies[j].length; k++) {
+            //element.Dependencies[j] can be either array or reference
+            if (Array.isArray(element.Dependencies[j])) {
+                //in this case it is an array
+                //which means it has alternative dependencies
 
-                let dependsTr = dependsTable.insertRow();
-                let dependsName = dependsTr.insertCell(0);
+                //add parantheses for alternative dependencies (optionals)
+                createFillRow('(');
 
-                if(typeof element.Dependencies[j][k] === 'string') {
+                for (let k = 0; k < element.Dependencies[j].length; k++) {
+
+                    let tr = table.insertRow();
+                    let name = tr.insertCell(0);
+
+                    if (typeof element.Dependencies[j][k] === 'string') {
+                        //if the system knows no such package the dependency is in string format
+
+                        name.innerHTML = element.Dependencies[j][k];
+                    } else {
+                        //if element is a reference
+
+                        name.appendChild(createAnchor(element.Dependencies[j][k]));
+                    }
+                }
+
+                //add parantheses for pipe dependencies (optionals)
+                createFillRow(')');
+            } else {
+                let tr = table.insertRow();
+                let name = tr.insertCell(0);
+
+                if (typeof element.Dependencies[j] === 'string') {
                     //if the system knows no such package the dependency is in string format
 
-                    dependsName.innerHTML = element.Dependencies[j][k];
-                }
-                else {
+                    name.innerHTML = element.Dependencies[j];
+                } else {
                     //if element is a reference
 
-                    dependsName.appendChild(createAnchor(element.Dependencies[j][k]));
+                    name.appendChild(createAnchor(element.Dependencies[j]));
                 }
             }
 
-            //add parantheses for pipe dependencies (optionals)
-            createFillRow(')');
-        }
-        else {
-            let dependsTr = dependsTable.insertRow();
-            let dependsName = dependsTr.insertCell(0);
-
-            if(typeof element.Dependencies[j] === 'string') {
-                //if the system knows no such package the dependency is in string format
-
-                dependsName.innerHTML = element.Dependencies[j];
+            function createFillRow(char) {
+                //inserts a row with given parameter to dependsTable with p
+                let fillTr = table.insertRow();
+                let fillName = fillTr.insertCell(0);
+                fillName.innerHTML = char;
             }
-            else {
-                //if element is a reference
-
-                dependsName.appendChild(createAnchor(element.Dependencies[j]));
-            }
-        }
-
-        function createFillRow(char) {
-            //inserts a row with given parameter to dependsTable with p
-            let fillTr = dependsTable.insertRow();
-            let fillName = fillTr.insertCell(0);
-            fillName.innerHTML = char;
         }
     }
 
-    function createAnchor(dependency) {
+    function createRevDependencyTable() {
+        let table = document.getElementById("p-rev-depends");
+        table.innerHTML = "";
+
+        if(element.revDependencies != null) {
+            for(let j = 0; j < element.revDependencies.length; j++) {
+                let tr = table.insertRow();
+                let name = tr.insertCell(0);
+
+                //name.innerHTML = element.revDependencies[j].Package;
+                name.appendChild(createAnchor(element.revDependencies[j]));
+            }
+        }
+    }
+
+    function createAnchor(element) {
         //creates anchor element with appropriate attributes
         let dependsA = document.createElement('a');
-        dependsA.title = dependency.Package;
-        dependsA.appendChild(document.createTextNode(dependency.Package));
+        dependsA.title = element.Package;
+        dependsA.appendChild(document.createTextNode(element.Package));
 
         dependsA.href = "error.html";
         dependsA.onclick = () => {
-            displayElement(dependency);
+            displayElement(element);
             return false;
         };
         return dependsA;

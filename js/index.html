@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Status exposer</title>
+    <script src="../parser.js" type="text/javascript"></script>
+    <script src="../main.js" type="text/javascript"></script>
+    <link rel="stylesheet" type="text/css" href="../styles.css">
+</head>
+<body>
+    <div class="split left">
+        <table id="packages"></table>
+    </div>
+
+    <div class="split right">
+        <div id="package-info">
+            <h1 id="p-package">Status Exposer</h1>
+            <p id="p-description">
+                Click an item of the list on the left to display information about
+                clicked package.<br><br>
+                Github page can be found at https://github.com/klrs/status_exposer<br><br>
+                Made by Kalle Rissanen.
+            </p>
+
+            <h2>Dependencies:</h2>
+            <table id="p-depends">
+                <th>
+                    Links to dependency packages will appear here. If there is no link it means the package is not in
+                    the status file. Alternate packages will be displayed inside parantheses.
+                </th>
+            </table>
+
+            <h2>Reverse Dependencies:</h2>
+            <table id="p-rev-depends">
+                <th>
+                    Links to reverse dependency packages will appear here.
+                </th>
+            </table>
+        </div>
+    </div>
+</body>
+</html>
