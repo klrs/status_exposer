@@ -4,4 +4,4 @@ This project uses a mock file.
 
 Programmed purely in Javascript and HTML/CSS.
 
-Kalle Rissanen 2020
+Kalle Rissanen 2020.
