@@ -24,7 +24,7 @@ function parse(input) {
             case '\n':
                 if(input[i+1] !== ' ') {
                     //this is where parser goes on to next key/value pair
-                    let prunedKey = key.split(' ').join('');
+                    let prunedKey = key.trim();
                     switch(prunedKey) {
                         case 'Depends':
                             element[prunedKey] = parseDepends(value);
@@ -36,7 +36,7 @@ function parse(input) {
                                 elements.push(element);
                             }
                             element = new Object();
-
+                            value = value.trim();
                             //falls to default...
                         default:
                             element[prunedKey] = value;
@@ -70,8 +70,63 @@ function parse(input) {
 }
 
 function parseDepends(input) {
-    //dependencies object
-    let d = new Object();
-    d.input = input;
-    return d;
+    //parses the Depends section of status file.
+    //called from parse
+
+    //dependencies array
+    //containes string and arrays (if there are optionals)
+    let dependsArr = [];
+
+    //name of a single dependency
+    let dependsName = "";
+
+    //array of optional packages
+    let optionals = [];
+
+    //if true parser omits characters
+    let skip = false;
+
+    for(let i = 0; i < input.length; i++) {
+        switch(input[i]) {
+            case '|':
+                optionals.push(dependsName.trim());
+                dependsName = "";
+                break;
+            case ',':
+                if(optionals.length !== 0) {
+                    optionals.push(dependsName.trim());
+                    dependsArr.push([...optionals]);
+                    optionals = [];
+                }
+                else {
+                    dependsArr.push(dependsName.trim());
+                }
+                dependsName = "";
+                break;
+            case '(':
+                skip = true;
+                break;
+            case ')':
+                skip = false;
+                break;
+            default:
+                if(!skip) {
+                    dependsName = dependsName + input[i];
+                }
+                break;
+        }
+
+        if(i === input.length-1){
+            if(optionals.length !== 0) {
+                optionals.push(dependsName.trim());
+                dependsArr.push([...optionals]);
+                optionals = [];
+            }
+            else {
+                dependsArr.push(dependsName.trim());
+            }
+        }
+    }
+    //console.log(dependsArr);
+    return dependsArr;
 }
